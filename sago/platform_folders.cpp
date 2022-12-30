@@ -62,11 +62,11 @@ static std::string getHome() {
 	buffer.resize(bufsize);
 	int error_code = getpwuid_r(uid, &pwd, buffer.data(), buffer.size(), &pw);
 	if (error_code) {
-		throw std::runtime_error("Unable to get passwd struct.");
+		return std::string(); //throw std::runtime_error("Unable to get passwd struct.");
 	}
 	const char* tempRes = pw->pw_dir;
 	if (!tempRes) {
-		throw std::runtime_error("User has no home directory");
+		return std::string(); //throw std::runtime_error("User has no home directory");
 	}
 	res = tempRes;
 	return res;
@@ -103,7 +103,7 @@ std::string win32_utf16_to_utf8(const wchar_t* wstr) {
 	}
 	if (actualSize == 0) {
 		// WideCharToMultiByte return 0 for errors.
-		throw std::runtime_error("UTF16 to UTF8 failed with error code: " + std::to_string(GetLastError()));
+		return std::string(); //throw std::runtime_error("UTF16 to UTF8 failed with error code: " + std::to_string(GetLastError()));
 	}
 	return res;
 }
@@ -127,7 +127,7 @@ static std::string GetKnownWindowsFolder(REFKNOWNFOLDERID folderId, const char* 
 	FreeCoTaskMemory scopeBoundMemory(wszPath);
 
 	if (!SUCCEEDED(hr)) {
-		throw std::runtime_error(errorMsg);
+		return std::string(); //throw std::runtime_error(errorMsg);
 	}
 	return sago::internal::win32_utf16_to_utf8(wszPath);
 }
@@ -153,13 +153,13 @@ static std::string GetAppDataLocal() {
 #include <sstream>
 //Typically Linux. For easy reading the comments will just say Linux but should work with most *nixes
 
-static void throwOnRelative(const char* envName, const char* envValue) {
-	if (envValue[0] != '/') {
-		char buffer[200];
-		std::snprintf(buffer, sizeof(buffer), "Environment \"%s\" does not start with an '/'. XDG specifies that the value must be absolute. The current value is: \"%s\"", envName, envValue);
-		throw std::runtime_error(buffer);
-	}
-}
+// static void throwOnRelative(const char* envName, const char* envValue) {
+// 	if (envValue[0] != '/') {
+// 		char buffer[200];
+// 		std::snprintf(buffer, sizeof(buffer), "Environment \"%s\" does not start with an '/'. XDG specifies that the value must be absolute. The current value is: \"%s\"", envName, envValue);
+// 		throw std::runtime_error(buffer);
+// 	}
+// }
 
 
 
@@ -167,7 +167,8 @@ static std::string getLinuxFolderDefault(const char* envName, const char* defaul
 	std::string res;
 	const char* tempRes = std::getenv(envName);
 	if (tempRes) {
-		throwOnRelative(envName, tempRes);
+		if (tempRes[0] != '/') //throwOnRelative(envName, tempRes);
+			return std::string();
 		res = tempRes;
 		return res;
 	}
@@ -275,18 +276,18 @@ static void PlatformFoldersAddFromFile(const std::string& filename, std::map<std
 		if (line.length() == 0 || line.at(0) == '#' || line.substr(0, 4) != "XDG_" || line.find("_DIR") == std::string::npos) {
 			continue;
 		}
-		try {
+		// try {
 			std::size_t splitPos = line.find('=');
 			std::string key = line.substr(0, splitPos);
 			std::size_t valueStart = line.find('"', splitPos);
 			std::size_t valueEnd = line.find('"', valueStart+1);
 			std::string value = line.substr(valueStart+1, valueEnd - valueStart - 1);
 			folders[key] = value;
-		}
-		catch (std::exception&  e) {
-			std::cerr << "WARNING: Failed to process \"" << line << "\" from \"" << filename << "\". Error: "<< e.what() << "\n";
-			continue;
-		}
+		// }
+		// catch (std::exception&  e) {
+		// 	std::cerr << "WARNING: Failed to process \"" << line << "\" from \"" << filename << "\". Error: "<< e.what() << "\n";
+		// 	continue;
+		// }
 	}
 }
 
@@ -312,13 +313,13 @@ static void PlatformFoldersFillData(std::map<std::string, std::string>& folders)
 PlatformFolders::PlatformFolders() {
 #if !defined(_WIN32) && !defined(__APPLE__)
 	this->data = new PlatformFolders::PlatformFoldersData();
-	try {
+	// try {
 		PlatformFoldersFillData(data->folders);
-	}
-	catch (...) {
-		delete this->data;
-		throw;
-	}
+	// }
+	// catch (...) {
+	// 	delete this->data;
+	// 	throw;
+	// }
 #endif
 }
 
