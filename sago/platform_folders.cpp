@@ -266,7 +266,7 @@ void appendAdditionalConfigDirectories(std::vector<std::string>& homes) {
 
 #if !defined(_WIN32) && !defined(__APPLE__)
 struct PlatformFolders::PlatformFoldersData {
-	std::map<std::string, std::string> folders;
+	std::map<std::string, std::string> folders {};
 };
 
 static void PlatformFoldersAddFromFile(const std::string& filename, std::map<std::string, std::string>& folders) {
