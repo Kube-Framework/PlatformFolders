@@ -45,7 +45,7 @@ SOFTWARE.
  */
 static std::string getHome() {
 	std::string res;
-	int uid = getuid();
+	auto uid = getuid();
 	const char* homeEnv = std::getenv("HOME");
 	if ( uid != 0 && homeEnv) {
 		//We only acknowlegde HOME if not root.
@@ -59,7 +59,7 @@ static std::string getHome() {
 		bufsize = 16384;
 	}
 	std::vector<char> buffer;
-	buffer.resize(bufsize);
+	buffer.resize(static_cast<std::size_t>(bufsize));
 	int error_code = getpwuid_r(uid, &pwd, buffer.data(), buffer.size(), &pw);
 	if (error_code) {
 		return std::string(); //throw std::runtime_error("Unable to get passwd struct.");
@@ -248,7 +248,7 @@ std::string getStateDir() {
 #endif
 }
 
-void appendAdditionalDataDirectories(std::vector<std::string>& homes) {
+void appendAdditionalDataDirectories([[maybe_unused]] std::vector<std::string>& homes) {
 #ifdef _WIN32
 	homes.push_back(GetAppDataCommon());
 #elif !defined(__APPLE__)
@@ -256,7 +256,7 @@ void appendAdditionalDataDirectories(std::vector<std::string>& homes) {
 #endif
 }
 
-void appendAdditionalConfigDirectories(std::vector<std::string>& homes) {
+void appendAdditionalConfigDirectories([[maybe_unused]] std::vector<std::string>& homes) {
 #ifdef _WIN32
 	homes.push_back(GetAppDataCommon());
 #elif !defined(__APPLE__)
